@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="YT Topics">
+<meta name="theme-color" content="#0e0f0f">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>YouTube Topic Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0f0f;
+    --surface: #161818;
+    --surface2: #1e2020;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.13);
+    --text: #f0efeb;
+    --muted: #7a7d7a;
+    --accent: #b5e48c;
+    --accent2: #76c442;
+    --danger: #e07070;
+    --gold: #e8c97a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    padding: max(env(safe-area-inset-top), 1.5rem) 1rem max(env(safe-area-inset-bottom), 2rem);
+  }
+  .wrap { max-width: 680px; margin: 0 auto; }
+  .hero { margin-bottom: 1.5rem; }
+  .hero h1 { font-family: 'DM Serif Display', serif; font-size: clamp(26px, 6vw, 38px); font-weight: 400; line-height: 1.15; margin-bottom: 0.4rem; }
+  .hero h1 em { font-style: italic; color: var(--accent); }
+  .hero p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.25rem; margin-bottom: 0.875rem; }
+  .card-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.75rem; font-weight: 500; }
+  select {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border2); border-radius: 10px;
+    color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 300;
+    padding: 12px 14px; outline: none; appearance: none; -webkit-appearance: none; margin-bottom: 0.875rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a7d7a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px;
+  }
+  select:focus { border-color: var(--accent); }
+  select option { background: #1e2020; }
+  .upload-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 0.875rem; }
+  .upload-box { background: var(--surface2); border: 1px dashed var(--border2); border-radius: 12px; padding: 0.875rem 0.5rem; text-align: center; cursor: pointer; transition: all 0.2s; min-height: 72px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .upload-box.done { border-style: solid; border-color: var(--accent2); background: rgba(118,196,66,0.08); }
+  .upload-box input { display: none; }
+  .upload-box .uname { font-size: 11px; font-weight: 500; color: var(--text); line-height: 1.3; }
+  .upload-box.done .uname { color: var(--accent); }
+  .upload-box .udesc { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .upload-icon { font-size: 16px; margin-bottom: 3px; }
+  .btn { width: 100%; padding: 15px; background: var(--accent); color: #0e0f0f; border: none; border-radius: 12px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s; touch-action: manipulation; }
+  .btn:active:not(:disabled) { background: var(--accent2); transform: scale(0.98); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .loading { display: none; align-items: center; gap: 12px; padding: 1rem 0; color: var(--muted); font-size: 14px; }
+  .spinner { width: 18px; height: 18px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .error { color: var(--danger); font-size: 13px; padding: 0.75rem 0; line-height: 1.5; }
+  .results { display: none; }
+  .section-title { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 0.75rem; }
+  .top-video { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .top-video:last-child { border-bottom: none; }
+  .rank { font-size: 12px; color: var(--muted); min-width: 18px; }
+  .vtitle { flex: 1; font-size: 12px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .vviews { font-size: 11px; background: rgba(181,228,140,0.1); color: var(--accent); border-radius: 6px; padding: 2px 8px; white-space: nowrap; font-weight: 500; }
+  .topics-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  @media (min-width: 540px) { .topics-grid { grid-template-columns: 1fr 1fr; } }
+  .topic-card { background: var(--surface2); border-radius: 12px; padding: 1rem; }
+  .topic-num { font-size: 10px; color: var(--muted); margin-bottom: 5px; }
+  .topic-title { font-size: 14px; font-weight: 500; color: var(--text); line-height: 1.4; margin-bottom: 5px; }
+  .topic-why { font-size: 12px; color: var(--muted); line-height: 1.5; margin-bottom: 8px; }
+  .topic-hook { font-size: 12px; color: var(--gold); font-style: italic; line-height: 1.5; border-left: 2px solid rgba(232,201,122,0.4); padding-left: 8px; }
+  .copy-btn { margin-top: 10px; display: block; width: 100%; font-size: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border2); border-radius: 8px; color: var(--muted); padding: 8px; cursor: pointer; font-family: 'DM Sans', sans-serif; touch-action: manipulation; }
+  .copy-btn:active { background: rgba(255,255,255,0.1); }
+  .history-item { display: flex; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); align-items: flex-start; }
+  .history-item:last-child { border-bottom: none; }
+  .hdate { font-size: 11px; color: var(--muted); min-width: 65px; }
+  .htitle { font-size: 12px; color: var(--text); line-height: 1.4; }
+  .hviews { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .install-banner { background: rgba(181,228,140,0.08); border: 1px solid rgba(181,228,140,0.2); border-radius: 12px; padding: 0.875rem 1rem; margin-bottom: 0.875rem; display: none; align-items: center; gap: 10px; }
+  .install-banner p { font-size: 13px; color: var(--text); flex: 1; }
+  .install-btn { background: var(--accent); color: #0e0f0f; border: none; border-radius: 8px; padding: 7px 14px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <h1>YouTube <em>topic</em><br>generator</h1>
+    <p>Upload your Studio exports, pick a month — get fresh topic ideas instantly.</p>
+  </div>
+
+  <div id="installBanner" class="install-banner">
+    <p>Add to home screen for quick access!</p>
+    <button class="install-btn" id="installBtn">Install</button>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Upload CSV exports from YouTube Studio</div>
+    <div class="upload-grid">
+      <div class="upload-box" id="box-table" onclick="document.getElementById('ft').click()">
+        <input type="file" id="ft" accept=".csv" onchange="handleFile('table',this)">
+        <div class="upload-icon">📊</div>
+        <div class="uname" id="un-table">Table_data</div>
+        <div class="udesc">Video stats</div>
+      </div>
+      <div class="upload-box" id="box-chart" onclick="document.getElementById('fc').click()">
+        <input type="file" id="fc" accept=".csv" onchange="handleFile('chart',this)">
+        <div class="upload-icon">📈</div>
+        <div class="uname" id="un-chart">Chart_data</div>
+        <div class="udesc">Daily views</div>
+      </div>
+      <div class="upload-box" id="box-totals" onclick="document.getElementById('fto').click()">
+        <input type="file" id="fto" accept=".csv" onchange="handleFile('totals',this)">
+        <div class="upload-icon">📋</div>
+        <div class="uname" id="un-totals">Totals</div>
+        <div class="udesc">Totals CSV</div>
+      </div>
+    </div>
+    <select id="monthPicker" onchange="checkReady()">
+      <option value="">Select a month to analyze...</option>
+    </select>
+    <button class="btn" id="analyzeBtn" onclick="analyze()" disabled>Analyze &amp; generate topics</button>
+  </div>
+
+  <div id="loading" class="loading">
+    <div class="spinner"></div>
+    <span id="loadingMsg">Generating topic ideas...</span>
+  </div>
+  <div id="errorMsg" class="error"></div>
+
+  <div id="results" class="results">
+    <div class="card">
+      <div class="section-title" id="topLabel">Top videos</div>
+      <div id="topVideosList"></div>
+    </div>
+    <div class="card">
+      <div class="section-title">Suggested topics</div>
+      <div id="topicsGrid" class="topics-grid"></div>
+    </div>
+    <div class="card">
+      <div class="section-title">Recent videos — last 2 months</div>
+      <div id="historyList"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let parsedTable = [];
+  let deferredPrompt = null;
+
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault(); deferredPrompt = e;
+    document.getElementById('installBanner').style.display = 'flex';
+  });
+  document.getElementById('installBtn').addEventListener('click', () => {
+    if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt = null; document.getElementById('installBanner').style.display = 'none'; }
+  });
+
+  function splitCSV(line) {
+    const r=[]; let c='',q=false;
+    for(let i=0;i<line.length;i++){
+      if(line[i]==='"'){q=!q;}
+      else if(line[i]===','&&!q){r.push(c);c='';}
+      else c+=line[i];
+    }
+    r.push(c); return r;
+  }
+  function parseCSV(txt) {
+    const lines=txt.trim().split('\n');
+    const hdrs=splitCSV(lines[0]).map(h=>h.replace(/"/g,'').trim());
+    return lines.slice(1).map(l=>{
+      const v=splitCSV(l); const o={};
+      hdrs.forEach((h,i)=>o[h]=(v[i]||'').replace(/"/g,'').trim());
+      return o;
+    });
+  }
+  function handleFile(type, inp) {
+    const f=inp.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=e=>{
+      if(type==='table'){
+        parsedTable=parseCSV(e.target.result).filter(r=>r['Video title']&&r['Video title'].length>5&&parseInt(r['Duration']||0)>120);
+        populateMonths();
+      }
+      const short=f.name.length>13?f.name.slice(0,12)+'…':f.name;
+      document.getElementById('un-'+type).textContent=short;
+      document.getElementById('box-'+type).classList.add('done');
+      checkReady();
+    };
+    r.readAsText(f);
+  }
+  function populateMonths() {
+    const set=new Set();
+    parsedTable.forEach(r=>{
+      const d=new Date(r['Video publish time']);
+      if(!isNaN(d)) set.add(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'));
+    });
+    const sel=document.getElementById('monthPicker');
+    sel.innerHTML='<option value="">Select a month to analyze...</option>';
+    Array.from(set).sort().reverse().forEach(m=>{
+      const [y,mo]=m.split('-');
+      const lbl=new Date(+y,+mo-1,1).toLocaleString('en-US',{month:'long',year:'numeric'});
+      sel.innerHTML+=`<option value="${m}">${lbl}</option>`;
+    });
+  }
+  function checkReady() {
+    document.getElementById('analyzeBtn').disabled=!(parsedTable.length&&document.getElementById('monthPicker').value);
+  }
+  function getTop10(monthStr) {
+    const [y,m]=monthStr.split('-').map(Number);
+    const target=`${y-1}-${String(m).padStart(2,'0')}`;
+    return parsedTable.filter(r=>{
+      const d=new Date(r['Video publish time']);
+      if(isNaN(d)) return false;
+      return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')===target;
+    }).sort((a,b)=>parseInt(b['Views']||0)-parseInt(a['Views']||0)).slice(0,10);
+  }
+  function getRecent() {
+    const now=new Date();
+    const cut=new Date(now.getFullYear(),now.getMonth()-2,1);
+    return parsedTable.filter(r=>{
+      const d=new Date(r['Video publish time']);
+      return !isNaN(d)&&d>=cut;
+    }).sort((a,b)=>new Date(b['Video publish time'])-new Date(a['Video publish time'])).slice(0,6);
+  }
+  async function analyze() {
+    const monthStr=document.getElementById('monthPicker').value;
+    const [y,m]=monthStr.split('-').map(Number);
+    const monthName=new Date(y,m-1,1).toLocaleString('en-US',{month:'long'});
+    const lastYear=y-1;
+    const top10=getTop10(monthStr);
+    const recent=getRecent();
+
+    document.getElementById('results').style.display='none';
+    document.getElementById('errorMsg').textContent='';
+
+    if(!top10.length){
+      document.getElementById('errorMsg').textContent=`No videos found for ${monthName} ${lastYear}. Try another month.`;
+      return;
+    }
+
+    document.getElementById('loading').style.display='flex';
+    document.getElementById('analyzeBtn').disabled=true;
+
+    const topTitles=top10.slice(0,5).map((v,i)=>`${i+1}. ${v['Video title']} (${parseInt(v['Views']).toLocaleString()} views)`).join('; ');
+    const recentTitles=recent.map(v=>v['Video title']).join('; ')||'none';
+    const prompt=`NC/Charlotte real estate YouTube channel. Top videos from ${monthName} ${lastYear}: ${topTitles}. Recent uploads to avoid: ${recentTitles}. Suggest 6 fresh video topics for ${monthName} ${y}. Return JSON array with fields: title, why (1 sentence), hook (1 sentence). JSON only.`;
+
+    try {
+      const res=await fetch('/.netlify/functions/generate',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({prompt})
+      });
+      const data=await res.json();
+      if(!res.ok) throw new Error(data.error||'Server error');
+      let raw=data.text.replace(/```json|```/g,'').trim();
+      const topics=JSON.parse(raw);
+      document.getElementById('loading').style.display='none';
+      renderResults(top10,topics,recent,monthName,lastYear);
+    } catch(err){
+      document.getElementById('loading').style.display='none';
+      document.getElementById('errorMsg').textContent='Error: '+err.message;
+      document.getElementById('analyzeBtn').disabled=false;
+    }
+  }
+  function renderResults(top10,topics,recent,monthName,lastYear){
+    document.getElementById('topLabel').textContent=`Top ${top10.length} — ${monthName} ${lastYear}`;
+    document.getElementById('topVideosList').innerHTML=top10.map((v,i)=>`
+      <div class="top-video">
+        <span class="rank">${i+1}</span>
+        <span class="vtitle">${v['Video title']}</span>
+        <span class="vviews">${parseInt(v['Views']).toLocaleString()}</span>
+      </div>`).join('');
+    document.getElementById('topicsGrid').innerHTML=topics.map((t,i)=>`
+      <div class="topic-card">
+        <div class="topic-num">Idea ${i+1}</div>
+        <div class="topic-title">${t.title}</div>
+        <div class="topic-why">${t.why}</div>
+        <div class="topic-hook">${t.hook}</div>
+        <button class="copy-btn" onclick="copyT(this,'${encodeURIComponent(t.title)}')">Copy title</button>
+      </div>`).join('');
+    document.getElementById('historyList').innerHTML=!recent.length
+      ?'<div style="font-size:12px;color:var(--muted)">No recent videos found.</div>'
+      :recent.map(v=>`
+        <div class="history-item">
+          <div class="hdate">${new Date(v['Video publish time']).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div>
+          <div><div class="htitle">${v['Video title']}</div><div class="hviews">${parseInt(v['Views']).toLocaleString()} views</div></div>
+        </div>`).join('');
+    document.getElementById('results').style.display='block';
+    document.getElementById('analyzeBtn').disabled=false;
+    document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
+  }
+  function copyT(btn,encoded){
+    const title=decodeURIComponent(encoded);
+    navigator.clipboard.writeText(title).then(()=>{
+      btn.textContent='Copied!';
+      setTimeout(()=>btn.textContent='Copy title',1500);
+    }).catch(()=>{
+      const ta=document.createElement('textarea');
+      ta.value=title; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+      btn.textContent='Copied!';
+      setTimeout(()=>btn.textContent='Copy title',1500);
+    });
+  }
+  if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
+</script>
+</body>
+</html>
