@@ -12,131 +12,76 @@
 <title>YouTube Topic Generator</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0e0f0f;
-    --surface: #161818;
-    --surface2: #1e2020;
-    --border: rgba(255,255,255,0.07);
-    --border2: rgba(255,255,255,0.13);
-    --text: #f0efeb;
-    --muted: #7a7d7a;
-    --accent: #b5e48c;
-    --accent2: #76c442;
-    --danger: #e07070;
-    --gold: #e8c97a;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 300;
-    min-height: 100vh;
-    padding: max(env(safe-area-inset-top), 1.5rem) 1rem max(env(safe-area-inset-bottom), 2rem);
-  }
-  .wrap { max-width: 680px; margin: 0 auto; }
-  .hero { margin-bottom: 1.5rem; }
-  .hero h1 { font-family: 'DM Serif Display', serif; font-size: clamp(26px, 6vw, 38px); font-weight: 400; line-height: 1.15; margin-bottom: 0.4rem; }
-  .hero h1 em { font-style: italic; color: var(--accent); }
-  .hero p { font-size: 14px; color: var(--muted); line-height: 1.6; }
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.25rem; margin-bottom: 0.875rem; }
-  .card-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.75rem; font-weight: 500; }
-  select {
-    width: 100%; background: var(--surface2); border: 1px solid var(--border2); border-radius: 10px;
-    color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 300;
-    padding: 12px 14px; outline: none; appearance: none; -webkit-appearance: none; margin-bottom: 0.875rem;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a7d7a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-    background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px;
-  }
-  select:focus { border-color: var(--accent); }
-  select option { background: #1e2020; }
-  .upload-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 0.875rem; }
-  .upload-box { background: var(--surface2); border: 1px dashed var(--border2); border-radius: 12px; padding: 0.875rem 0.5rem; text-align: center; cursor: pointer; transition: all 0.2s; min-height: 72px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-  .upload-box.done { border-style: solid; border-color: var(--accent2); background: rgba(118,196,66,0.08); }
-  .upload-box input { display: none; }
-  .upload-box .uname { font-size: 11px; font-weight: 500; color: var(--text); line-height: 1.3; }
-  .upload-box.done .uname { color: var(--accent); }
-  .upload-box .udesc { font-size: 10px; color: var(--muted); margin-top: 2px; }
-  .upload-icon { font-size: 16px; margin-bottom: 3px; }
-  .btn { width: 100%; padding: 15px; background: var(--accent); color: #0e0f0f; border: none; border-radius: 12px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s; touch-action: manipulation; }
-  .btn:active:not(:disabled) { background: var(--accent2); transform: scale(0.98); }
-  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  .loading { display: none; align-items: center; gap: 12px; padding: 1rem 0; color: var(--muted); font-size: 14px; }
-  .spinner { width: 18px; height: 18px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .error { color: var(--danger); font-size: 13px; padding: 0.75rem 0; line-height: 1.5; }
-  .results { display: none; }
-  .section-title { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin-bottom: 0.75rem; }
-  .top-video { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
-  .top-video:last-child { border-bottom: none; }
-  .rank { font-size: 12px; color: var(--muted); min-width: 18px; }
-  .vtitle { flex: 1; font-size: 12px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .vviews { font-size: 11px; background: rgba(181,228,140,0.1); color: var(--accent); border-radius: 6px; padding: 2px 8px; white-space: nowrap; font-weight: 500; }
-  .topics-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
-  @media (min-width: 540px) { .topics-grid { grid-template-columns: 1fr 1fr; } }
-  .topic-card { background: var(--surface2); border-radius: 12px; padding: 1rem; }
-  .topic-num { font-size: 10px; color: var(--muted); margin-bottom: 5px; }
-  .topic-title { font-size: 14px; font-weight: 500; color: var(--text); line-height: 1.4; margin-bottom: 5px; }
-  .topic-why { font-size: 12px; color: var(--muted); line-height: 1.5; margin-bottom: 8px; }
-  .topic-hook { font-size: 12px; color: var(--gold); font-style: italic; line-height: 1.5; border-left: 2px solid rgba(232,201,122,0.4); padding-left: 8px; }
-  .copy-btn { margin-top: 10px; display: block; width: 100%; font-size: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border2); border-radius: 8px; color: var(--muted); padding: 8px; cursor: pointer; font-family: 'DM Sans', sans-serif; touch-action: manipulation; }
-  .copy-btn:active { background: rgba(255,255,255,0.1); }
-  .history-item { display: flex; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); align-items: flex-start; }
-  .history-item:last-child { border-bottom: none; }
-  .hdate { font-size: 11px; color: var(--muted); min-width: 65px; }
-  .htitle { font-size: 12px; color: var(--text); line-height: 1.4; }
-  .hviews { font-size: 11px; color: var(--muted); margin-top: 2px; }
-  .install-banner { background: rgba(181,228,140,0.08); border: 1px solid rgba(181,228,140,0.2); border-radius: 12px; padding: 0.875rem 1rem; margin-bottom: 0.875rem; display: none; align-items: center; gap: 10px; }
-  .install-banner p { font-size: 13px; color: var(--text); flex: 1; }
-  .install-btn { background: var(--accent); color: #0e0f0f; border: none; border-radius: 8px; padding: 7px 14px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+:root{--bg:#0e0f0f;--surface:#161818;--surface2:#1e2020;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);--text:#f0efeb;--muted:#7a7d7a;--accent:#b5e48c;--accent2:#76c442;--danger:#e07070;--gold:#e8c97a;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:300;min-height:100vh;padding:max(env(safe-area-inset-top),1.5rem) 1rem max(env(safe-area-inset-bottom),2rem);}
+.wrap{max-width:680px;margin:0 auto;}
+.hero{margin-bottom:1.5rem;}
+.hero h1{font-family:'DM Serif Display',serif;font-size:clamp(26px,6vw,38px);font-weight:400;line-height:1.15;margin-bottom:0.4rem;}
+.hero h1 em{font-style:italic;color:var(--accent);}
+.hero p{font-size:14px;color:var(--muted);line-height:1.6;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.25rem;margin-bottom:0.875rem;}
+.card-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.75rem;font-weight:500;}
+select{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:16px;font-weight:300;padding:12px 14px;outline:none;appearance:none;-webkit-appearance:none;margin-bottom:.875rem;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a7d7a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;}
+select:focus{border-color:var(--accent);}
+select option{background:#1e2020;}
+.last-updated{font-size:11px;color:var(--muted);margin-bottom:.75rem;}
+.btn{width:100%;padding:15px;background:var(--accent);color:#0e0f0f;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;transition:all .2s;touch-action:manipulation;}
+.btn:active:not(:disabled){background:var(--accent2);transform:scale(.98);}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.loading{display:none;align-items:center;gap:12px;padding:1rem 0;color:var(--muted);font-size:14px;}
+.spinner{width:18px;height:18px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.error{color:var(--danger);font-size:13px;padding:.75rem 0;line-height:1.5;}
+.results{display:none;}
+.section-title{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:500;margin-bottom:.75rem;}
+.top-video{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);}
+.top-video:last-child{border-bottom:none;}
+.rank{font-size:12px;color:var(--muted);min-width:18px;}
+.vtitle{flex:1;font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.vviews{font-size:11px;background:rgba(181,228,140,.1);color:var(--accent);border-radius:6px;padding:2px 8px;white-space:nowrap;font-weight:500;}
+.topics-grid{display:grid;grid-template-columns:1fr;gap:10px;}
+@media(min-width:540px){.topics-grid{grid-template-columns:1fr 1fr;}}
+.topic-card{background:var(--surface2);border-radius:12px;padding:1rem;}
+.topic-num{font-size:10px;color:var(--muted);margin-bottom:5px;}
+.topic-title{font-size:14px;font-weight:500;color:var(--text);line-height:1.4;margin-bottom:5px;}
+.topic-why{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:8px;}
+.topic-hook{font-size:12px;color:var(--gold);font-style:italic;line-height:1.5;border-left:2px solid rgba(232,201,122,.4);padding-left:8px;}
+.copy-btn{margin-top:10px;display:block;width:100%;font-size:12px;background:rgba(255,255,255,.05);border:1px solid var(--border2);border-radius:8px;color:var(--muted);padding:8px;cursor:pointer;font-family:'DM Sans',sans-serif;touch-action:manipulation;}
+.copy-btn:active{background:rgba(255,255,255,.1);}
+.history-item{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);align-items:flex-start;}
+.history-item:last-child{border-bottom:none;}
+.hdate{font-size:11px;color:var(--muted);min-width:65px;}
+.htitle{font-size:12px;color:var(--text);line-height:1.4;}
+.hviews{font-size:11px;color:var(--muted);margin-top:2px;}
+.install-banner{background:rgba(181,228,140,.08);border:1px solid rgba(181,228,140,.2);border-radius:12px;padding:.875rem 1rem;margin-bottom:.875rem;display:none;align-items:center;gap:10px;}
+.install-banner p{font-size:13px;color:var(--text);flex:1;}
+.install-btn{background:var(--accent);color:#0e0f0f;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="hero">
     <h1>YouTube <em>topic</em><br>generator</h1>
-    <p>Upload your Studio exports, pick a month — get fresh topic ideas instantly.</p>
+    <p>Pick a month and get fresh topic ideas instantly.</p>
   </div>
-
   <div id="installBanner" class="install-banner">
     <p>Add to home screen for quick access!</p>
     <button class="install-btn" id="installBtn">Install</button>
   </div>
-
   <div class="card">
-    <div class="card-label">Upload CSV exports from YouTube Studio</div>
-    <div class="upload-grid">
-      <div class="upload-box" id="box-table" onclick="document.getElementById('ft').click()">
-        <input type="file" id="ft" accept=".csv" onchange="handleFile('table',this)">
-        <div class="upload-icon">📊</div>
-        <div class="uname" id="un-table">Table_data</div>
-        <div class="udesc">Video stats</div>
-      </div>
-      <div class="upload-box" id="box-chart" onclick="document.getElementById('fc').click()">
-        <input type="file" id="fc" accept=".csv" onchange="handleFile('chart',this)">
-        <div class="upload-icon">📈</div>
-        <div class="uname" id="un-chart">Chart_data</div>
-        <div class="udesc">Daily views</div>
-      </div>
-      <div class="upload-box" id="box-totals" onclick="document.getElementById('fto').click()">
-        <input type="file" id="fto" accept=".csv" onchange="handleFile('totals',this)">
-        <div class="upload-icon">📋</div>
-        <div class="uname" id="un-totals">Totals</div>
-        <div class="udesc">Totals CSV</div>
-      </div>
-    </div>
+    <div class="card-label">Select month to analyze</div>
+    <div class="last-updated" id="lastUpdated"></div>
     <select id="monthPicker" onchange="checkReady()">
-      <option value="">Select a month to analyze...</option>
+      <option value="">Select a month...</option>
     </select>
-    <button class="btn" id="analyzeBtn" onclick="analyze()" disabled>Analyze &amp; generate topics</button>
+    <button class="btn" id="analyzeBtn" onclick="analyze()" disabled>Generate topics</button>
   </div>
-
   <div id="loading" class="loading">
     <div class="spinner"></div>
     <span id="loadingMsg">Generating topic ideas...</span>
   </div>
   <div id="errorMsg" class="error"></div>
-
   <div id="results" class="results">
     <div class="card">
       <div class="section-title" id="topLabel">Top videos</div>
@@ -152,168 +97,78 @@
     </div>
   </div>
 </div>
-
 <script>
-  let parsedTable = [];
-  let deferredPrompt = null;
+const VIDEOS=[{"t":"Pros and Cons of Living in Charlotte North Carolina | Good and Bad of Charlotte North Carolina","p":"Jul 31, 2022","v":63337},{"t":"BEST City To Live In North Carolina | WATCH This Before Moving to Raleigh NC","p":"Apr 11, 2023","v":42508},{"t":"The 5 Best Places In North Carolina You Should Move To in 2025","p":"Dec 29, 2024","v":29822},{"t":"The TRUTH About Living in Charlotte NC |  What Locals Wish They Knew Before Moving | Charlotte NC","p":"Mar 2, 2025","v":20677},{"t":"North Carolina OR South Carolina Pros and Cons | Watch This BEFORE You Pick North Carolina","p":"Jan 19, 2023","v":18744},{"t":"Luxury Real Estate Vlog | Custom Luxury Home Tour | Fort Mill Luxury","p":"Oct 14, 2023","v":18039},{"t":"Lakefront Luxury Mansion | Luxury Home Builder In Charlotte NC | Charlotte NC Homes For Sale","p":"Apr 3, 2024","v":16167},{"t":"Should You Retire to Charlotte? | Living in North Carolina | Charlotte NC VLOG","p":"Jan 23, 2023","v":12751},{"t":"10 Most Dangerous Towns in North Carolina | Don't Go To These Towns In Nc If You Want To Stay Safe","p":"Jul 20, 2023","v":12553},{"t":"BEST Area to Live in Charlotte NC | Watch This BEFORE Picking Where to Live | Living in NC","p":"Aug 22, 2024","v":12427},{"t":"South Carolina's Secret town | Tour of Fort Mill SC | Best Hoods In Charlotte","p":"Sep 14, 2023","v":12368},{"t":"Best Lake in the United States? | Charlotte NC Lake Norman Named Best in the Country","p":"May 15, 2023","v":11704},{"t":"Toll Brothers New Builds | New Construction in Charlotte North Carolina","p":"Jan 20, 2024","v":10353},{"t":"Charlotte Master Plan Communities | Best Subdivisions in Charlotte NC | Charlotte NC Living","p":"May 3, 2024","v":10075},{"t":"Safest Neighborhoods In Charlotte | Charlottes Best Neighborhoods | North Carolina's Best Towns","p":"Aug 19, 2023","v":9384},{"t":"BEST DEALS on NEW HOMES in Steele Creek Charlotte NC [Parkside Crossing by Pulte Homes]","p":"May 1, 2025","v":7951},{"t":"DON'T Move to Charlotte North Carolina | WATCH FIRST BEFORE MOVING to Charlotte North Carolina","p":"Sep 14, 2022","v":7295},{"t":"Matthews North Carolina | Downtown Tour of Matthews NC | Charlotte VLOG Tour","p":"Jan 7, 2023","v":6731},{"t":"Is Texas Better Than North Carolina | Differences Between Living In Texas vs North Carolina","p":"Nov 17, 2023","v":6714},{"t":"Texas vs Charlotte NC | Why you Need to LEAVE Texas","p":"Oct 23, 2023","v":6274},{"t":"Everything You Need To Know About Monroe NC | Why Monroe May Be The Best Unknown Town","p":"Feb 29, 2024","v":5956},{"t":"WATCH THIS BEFORE You Move to Rock Hill SC | Why you NEED to move to Rock Hill | Charlotte Suburbs","p":"Nov 1, 2022","v":5516},{"t":"The Surprising TRUTH About Living in Gastonia NC [Full Breakdown] | Charlotte NC Suburbs","p":"May 15, 2025","v":5458},{"t":"Charlotte Housing Market 2025 Update | Prices, Rates & Predictions for 2026","p":"Aug 10, 2025","v":5162},{"t":"Tour Of Belmont North Carolina | North Carolina's Best Small Town | Charlotte Vlog Tour","p":"Jul 31, 2023","v":4941},{"t":"What Public Schools Are Great in Charlotte? | Top Public Schools in Charlotte North Carolina","p":"Aug 23, 2022","v":4775},{"t":"Top 5 Best Towns to Retire in North Carolina for 2026","p":"Jan 11, 2026","v":4774},{"t":"North Carolina Veterans Benefits | NC Loves Veterans | Charlotte North Carolina Real Estate","p":"Nov 25, 2022","v":4753},{"t":"PROS & CONS: What To Expect When MOVING To Concord North Carolina | Charlotte NC Suburbs","p":"Jan 30, 2025","v":4714},{"t":"Davidson North Carolina Downtown Tour | Davidson VLOG Tour | Charlotte NC Suburb VLOG Tour","p":"Oct 1, 2022","v":4645},{"t":"Where to Live in South Carolina | TOP South Carolina Towns REVEALED!","p":"Jan 9, 2025","v":4633},{"t":"The Good and the Bad of Fort Mill | Fort Mill South Carolina | Charlotte Suburbs","p":"Dec 8, 2022","v":4583},{"t":"Affordable Homes in Charlotte NC | Best Neighborhoods Under $500K","p":"Aug 17, 2025","v":4467},{"t":"Why People Are LEAVING Charlotte NC in 2025? (And Why You Might Still Move!)","p":"Jun 1, 2025","v":4333},{"t":"Monroe North Carolina Vlog Tour | Forgotten Town | Next Coolest Town?","p":"Feb 7, 2024","v":4325},{"t":"Top 10 WEALTHIEST Neighborhoods in  Charlotte NC | LUXURY HOMES In Charlotte North Carolina","p":"Aug 31, 2022","v":4117},{"t":"Huntersville Explained | Exploring Charlotte North Carolina | Charlotte VLOG Tour","p":"Jun 19, 2023","v":4040},{"t":"What is Charlotte's BEST Suburb | Waxhaw North Carolina | Living in Charlotte NC","p":"Jan 2, 2024","v":3930},{"t":"Inside a $3.5 MILLION Custom Luxury Home in Davidson NC | Charlotte New Construction Homes","p":"Feb 13, 2025","v":3912},{"t":"Top 5 Best Places in North Carolina to Move to in 2026","p":"Jan 4, 2026","v":3841},{"t":"Cost of Living, Weather, Jobs and Housing in 2025 | Charlotte NC Vs Orlando FL","p":"May 25, 2025","v":3826},{"t":"New Houses in Charlotte | Charlotte North Carolina Real Estate | New Construction","p":"Mar 27, 2023","v":3815},{"t":"New Homes in TOP Rated School District | Cannon Run Concord NC | Charlotte New Construction Homes","p":"Feb 16, 2025","v":3759},{"t":"Small Town or Mini City? Concord NC Will AMAZE You! | Living in Concord NC | Charlotte NC Suburbs","p":"Feb 9, 2025","v":3742},{"t":"Lake Norman vs. Lake Wylie | Lake Living in Charlotte NC | Moving to Charlotte NC","p":"Feb 2, 2025","v":3696},{"t":"Huntersville NC New Construction (Discounted 100k) | Charlotte NC Discounted New Construction","p":"Feb 20, 2025","v":3583},{"t":"Fort Mill South Carolina VLOG Tour | Best Latte in South Carolina | Charlotte North Carolina Suburb","p":"Nov 11, 2022","v":3575},{"t":"Leaving Florida for Charlotte NC | Why People Are Leaving Florida | Charlotte NC VLOG","p":"Apr 28, 2023","v":3540},{"t":"How to Buy a House in Charlotte North Carolina | Buy a House 101 | Home Buying 2023","p":"Dec 29, 2022","v":3482},{"t":"Attractions Close to Charlotte NC | Charlotte Day Trips | Charlotte NC VLOG","p":"Feb 12, 2023","v":3480},{"t":"Matthews North Carolina | Pros and Cons of Matthews | Charlotte NC Suburbs","p":"Feb 3, 2023","v":3448},{"t":"Charlotte NC Job Market 2025 | Top Industries, Big Company Expansions & Why Everyone’s Moving Here","p":"Jun 8, 2025","v":3407},{"t":"DON'T MOVE TO CHARLOTTE Before Watching | Everything You Need to Know About Charlotte Suburbs","p":"Oct 9, 2022","v":3370},{"t":"2 MAJOR CHANGES Coming to Charlotte North Carolina (Centre South and The Pearl)","p":"Feb 15, 2026","v":3339},{"t":"Charlotte NC’s Next HOT Neighborhood? NEW Homes 2 Mins from Uptown Under $500K!","p":"Mar 23, 2025","v":3335},{"t":"Fastest Growing Town in North Carolina | Everything You NEED to Know About Mooresville NC","p":"Nov 3, 2024","v":3329},{"t":"North Carolinas Best Small Town | Small Town NC Tour | Towns Of Charlotte North Carolina","p":"Jun 15, 2023","v":3189},{"t":"Fort Mill SC Explained | The Ins and Outs of Fort Mill | Charlotte North Carolina Suburbs","p":"Nov 23, 2022","v":3134},{"t":"Is Charlotte North Carolina Safe? | Charlotte Crime Rates | Charlotte VLOG","p":"Feb 18, 2023","v":3124},{"t":"Homes for Sale Charlotte NC | Living in Charlotte VLOG","p":"Jun 16, 2024","v":3097},{"t":"Watch THIS Before Moving to Fort Mill | Ins and Outs of Fort Mill SC | Charlotte Suburbs","p":"Dec 14, 2022","v":3072},{"t":"Pros and Cons of Living in Mint Hill | Life in Mint Hill NC | Living in Charlotte NC VLOG","p":"Jun 25, 2024","v":3060},{"t":"VLOG Tour of Rock Hill SC | Small Town, BIG Personality | Charlotte Suburbs","p":"Nov 7, 2022","v":3013},{"t":"Inside the BEST New Construction in Huntersville NC | Luxury Living Just Outside Charlotte NC","p":"May 22, 2025","v":2980},{"t":"Charlotte North Carolina Explained | Full Tour of Charlotte North Carolina","p":"Dec 24, 2023","v":2873},{"t":"Pros and Cons of Living in Ballantyne Charlotte NC (What No One Says) | Living in Charlotte NC","p":"Jan 19, 2025","v":2751},{"t":"Growth of Kannapolis North Carolina | Charlotte Suburbs | Charlotte NC VLOG","p":"May 23, 2023","v":2726},{"t":"Living in Denver NC | Pros & Cons of Lake Norman’s Hidden Gem","p":"Aug 24, 2025","v":2715},{"t":"Inside a $1.18M Luxury Home Near Charlotte NC | Luxury for Nearly Half the Price!","p":"Jun 15, 2025","v":2696},{"t":"4 Most Affordable South Carolina Towns You Need to Know! | Living Options Near Charlotte NC","p":"Jan 2, 2025","v":2626},{"t":"Exploring Charlotte's Most Breathtaking Communities | Charlotte Best Places to Live","p":"Jan 2, 2026","v":2600},{"t":"6 MUST Do's Before Moving to Charlotte | DONT Move Before Doing These","p":"Nov 30, 2022","v":2589},{"t":"Pros and Cons of Living in Belmont NC | The GOOD and The BAD of Belmont NC | Charlotte NC  Suburbs","p":"Jan 23, 2025","v":2588},{"t":"AFFORDABLE Luxury Home in Olmsted Huntersville NC (Just 20 Mins from Charlotte!) | Charlotte Suburbs","p":"Feb 27, 2025","v":2551},{"t":"The FASTEST-GROWING City Near Charlotte  | Living in Concord NC Full Map Tour | Charlotte NC Suburbs","p":"Feb 6, 2025","v":2527},{"t":"Where to Live If You Are Single in Charlotte | Best Area for Singles In Charlotte North Carolina","p":"Jul 23, 2022","v":2488},{"t":"Good and Bad of Cornelius | NC Lake Towns | Charlotte NC VLOG","p":"Jan 4, 2023","v":2482},{"t":"Political Views in Charlotte NC | What Are The Politics in North Carolina? | Moving to Charlotte NC","p":"Jul 14, 2023","v":2402},{"t":"BIG CHANGES Coming to Huntersville NC | $200M Birkdale Village EXPANSION | Charlotte NC Suburbs","p":"Mar 27, 2025","v":2385},{"t":"Affordable Home in Charlotte NC | Full Tour of Prosperity Village Hidden Gem Under $425K","p":"Jun 26, 2025","v":2379},{"t":"Concord NC Home Tour Under $400K | Charlotte Suburb Living","p":"Jul 27, 2025","v":2365},{"t":"Moving to Charlotte North Carolina from New York City | Why You Need to Leave New York","p":"Aug 2, 2022","v":2352},{"t":"BEST Shopping in Charlotte North Carolina | Best Town In Charlotte NC | Charlotte VLOG Tour","p":"May 26, 2023","v":2323},{"t":"Charlotte NC vs Atlanta GA (Which City Should You Move To?) | Living in Charlotte NC","p":"Mar 13, 2025","v":2221},{"t":"South Carolina Map Tour: Best Small Towns to Live in South Carolina 2025 | Towns Near Charlotte, NC","p":"Jan 5, 2025","v":2216},{"t":"Living in the Palisades Charlotte North Carolina | Charlotte NC LUXURY Neighborhood | Luxury Homes","p":"Sep 8, 2022","v":2205},{"t":"Best Places for Singles in Charlotte North Carolina | South End VLOG Tour","p":"Oct 6, 2022","v":2196},{"t":"Lake Norman Living | Cornelius NC Explained | Charlotte North Carolina Lake Life","p":"Oct 17, 2022","v":2184},{"t":"TOP 5 Private Schools in Charlotte NC | Best Private Schools in North Carolina | Charlotte Education","p":"Apr 11, 2024","v":2151},{"t":"Why The River District is Charlotte's Most EXCITING New Neighborhood? | Living in Charlotte NC","p":"Apr 24, 2025","v":2103},{"t":"Inside a Fully Furnished NEW Luxury Home in Belmont NC [McLean South Shore] | Just Outside Charlotte","p":"Apr 20, 2025","v":2050},{"t":"Cost of Living in Charlotte, NC | Compared to NYC, LA, Miami & Dallas","p":"Jul 31, 2025","v":2030},{"t":"3 New Models in Lancaster SC by Pulte Homes | Full Tour & Pricing!","p":"Aug 7, 2025","v":1998},{"t":"The Secret’s Out! BIG CHANGES Coming to Concord NC – Here’s What to Expect","p":"Jan 12, 2025","v":1925},{"t":"Custom New Construction in SC | What to Expect When Building a Home | Fort Mill Luxury","p":"Sep 24, 2023","v":1877},{"t":"Watch This BEFORE Buying a NEW Construction Home in Charlotte NC | Custom Homes","p":"Mar 23, 2024","v":1868},{"t":"Top 5 BEST Charlotte Golf Courses | Charlotte NC Golf Neighborhoods","p":"Oct 17, 2024","v":1865},{"t":"Which Charlotte Suburb Is Better? | Indian Land Vs Indian Trail | NC vs SC Explained","p":"May 5, 2023","v":1852},{"t":"Charlotte NC vs Wilmington NC | Where’s the Better Place to Live in 2025?","p":"Jun 19, 2025","v":1849},{"t":"Top 5 SAFEST NEIGHBORHOODS in Charlotte NC | Living in Charlotte NC | Charlotte NC Real Estate","p":"Jan 16, 2025","v":1843},{"t":"Moving to Charlotte in 2026? 7 Game-Changing Charlotte Developments You MUST Know","p":"Nov 6, 2025","v":1838},{"t":"Buy NOW or WAIT? The TRUTH About the 2025 Charlotte Housing Market | Living in Charlotte NC","p":"Mar 30, 2025","v":1790},{"t":"Where to Live Near Charlotte North Carolina | Fastest-Growing Suburbs Revealed","p":"Nov 30, 2025","v":1778},{"t":"Charlotte NC's Greenways Might Just Sell You on Moving Here | Living in Charlotte NC","p":"May 4, 2025","v":1770},{"t":"Rock Hill Pros and Cons | The GOOD and The BAD of Rock Hill SC | Best Charlotte Suburbs","p":"Oct 27, 2022","v":1748},{"t":"INSIDE One of Charlotte NC’s Most Stunning Luxury Homes | Providence Park New Construction Tour","p":"Jun 22, 2025","v":1747},{"t":"Charlotte Neighborhood Tour | Luxury in Dilworth | Charlotte VLOG Tour","p":"Jan 29, 2023","v":1739},{"t":"Living in Mount Holly NC | Surprising Pros and Cons You Didn't Know! [Charlotte NC Real Estate]","p":"Dec 26, 2024","v":1736},{"t":"Best Places to Live in Huntersville NC | Huntersville Best Neighborhoods | Charlotte NC VLOG","p":"Nov 18, 2024","v":1712},{"t":"The Good and the Bad of Davidson NC | Watch This BEFORE You Move to Davidson","p":"Oct 20, 2022","v":1695},{"t":"Charlotte The Real Melting Pot | #2 Fastest‑Growing City & Cultural Hub!","p":"Jul 24, 2025","v":1662},{"t":"What Are The REAL Pros and Cons of Living in South Charlotte | Charlotte NC Neighborhoods","p":"May 11, 2025","v":1659},{"t":"Downtown Cornelius VLOG Tour | Charlotte North Carolina VLOG | Living in Cornelius NC","p":"Sep 27, 2022","v":1630},{"t":"Top Companies Bringing Thousands of Jobs to Charlotte Area in 2026 | What That Means for Relocators","p":"Nov 20, 2025","v":1627},{"t":"Top 8 New Construction Communities North of Charlotte NC","p":"Oct 9, 2025","v":1617},{"t":"Most Wealthy Areas of Charlotte | Best of Charlotte North Carolina","p":"Aug 18, 2022","v":1617},{"t":"Charlotte vs Phoenix Arizona | Is It Better to Live in Charlotte or Pheonix | Charlotte VLOG","p":"Jul 30, 2024","v":1607},{"t":"Best Town To Live in Charlotte | Matthews North Carolina | Charlotte NC Suburbs","p":"Jan 14, 2023","v":1592},{"t":"MOVING to Ballantyne NC [FULL MAP TOUR] | Living in Charlotte North Carolina","p":"Jan 26, 2025","v":1577},{"t":"10 Worst Parts About Charlotte | Charlotte NC Best Place to Live? | Charlotte NC VLOG","p":"Sep 22, 2024","v":1573},{"t":"TOP 5 Reasons to Move in North Carolina | Why EVERYONE is Moving to North Carolina","p":"Mar 16, 2025","v":1565},{"t":"Top 5 Neighborhoods in Matthews NC to Live In 2025 | Best Places to Buy a Home Near Charlotte","p":"May 18, 2025","v":1537},{"t":"Best Neighborhood in North Charlotte | Living in Charlotte North Carolina VLOG","p":"Jul 14, 2022","v":1535},{"t":"Driving Through Charlotte NC | Explore The Charlotte NC Roads | Charlotte VLOG","p":"Aug 8, 2023","v":1519},{"t":"Thinking About Moving to Mooresville NC? Watch This First!","p":"Oct 3, 2024","v":1496},{"t":"BEST Adult Communities in Charlotte NC | Over 55 Lifestyle in Charlotte NC","p":"May 15, 2024","v":1495},{"t":"Best Neighborhood in Charlotte North Carolina | Prosperity Village | Charlotte VLOG Tour","p":"Jun 1, 2023","v":1477},{"t":"Driving Tour of Charlotte North Carolina | What Does Charlotte Look Like? | Charlotte NC VLOG Tour","p":"May 3, 2023","v":1469},{"t":"Everything You Need to Know About Rock Hill SC | Charlotte North Carolina Suburbs","p":"Nov 17, 2022","v":1461},{"t":"How Expensive is Charlotte North Carolina | Charlotte North Carolina Cost of Living","p":"Aug 8, 2022","v":1425},{"t":"Salisbury NC Home for Sale | COUNTRY LIVING on a Half-Acre Lot | Just 30 Mins to Charlotte NC","p":"Apr 3, 2025","v":1419},{"t":"Your COMPLETE GUIDE to Living in Steel Creek Charlotte NC | The Next HOT Charlotte Neighborhood","p":"May 8, 2025","v":1411},{"t":"Why Huntersville is the Best Town for Kids | Tour of Huntersville NC | Charlotte Nature Preserve","p":"Nov 28, 2024","v":1399},{"t":"Home Out of Pottery Barn | Luxury Feel at Affordable Price | Charlotte NC Suburban Living","p":"Oct 24, 2024","v":1381},{"t":"Best Places Near Charlotte NC for Lake Life","p":"Jun 5, 2025","v":1375},{"t":"Living in Charlotte NC vs Florida | Get Out of Florida Too Expensive","p":"Nov 8, 2023","v":1368},{"t":"$3 MILLION Mansion in Fort Mill | Fort Mill South Carolina Home Tour | NC vs. SC","p":"Aug 29, 2022","v":1365},{"t":"Moving to Mount Holly NC? Don’t Make the Move Until You See This!","p":"Dec 22, 2024","v":1354},{"t":"Living in Steele Creek Charlotte NC | Pros and Cons, Cost of Living, and Major Changes Coming!","p":"Apr 27, 2025","v":1352},{"t":"What is There To Do In Charlotte? | Activities In Charlotte North Carolina","p":"Oct 6, 2023","v":1352},{"t":"Your Moving OUT OF STATE Guide | 6 Step Moving Plan | Charlotte NC Move","p":"Mar 10, 2024","v":1349},{"t":"Near Charlotte North Carolina Home Tour Under $450K | Salisbury NC","p":"Aug 28, 2025","v":1343},{"t":"Luxury Classica Homes Huntersville North Carolina Tour","p":"Oct 19, 2025","v":1342},{"t":"Mount Holly North Carolina Vlog Tour","p":"Jul 20, 2025","v":1307},{"t":"Charlotte NC vs Charleston SC – Which City is Better to Live In?","p":"Jul 13, 2025","v":1281},{"t":"Luxury New Construction in South Charlotte | 55 and Over Charlotte Neighborhood | Charlotte VLOG","p":"Jul 19, 2024","v":1263},{"t":"Why Charlotte is BETTER Than California | North Carolina vs California","p":"Jul 10, 2023","v":1260},{"t":"Living in Weddington NC | Pros & Cons, Cost of Living, Schools & Why Families Are Moving Here","p":"Apr 6, 2025","v":1223},{"t":"New Construction In Monroe | Charlotte New Construction Under $550,000","p":"Aug 27, 2023","v":1205},{"t":"Inside a Stunning New Townhome Near NODA Charlotte NC | Best Affordable New Construction Tour 2025","p":"Oct 30, 2025","v":1199},{"t":"Belmont NC EXPLAINED | The BEST of Belmont North Carolina in This FULL MAP TOUR | Charlotte Suburbs","p":"Mar 20, 2025","v":1196},{"t":"Inside a Luxury Home in Harrisburg NC | Moving to Charlotte NC Home Tour","p":"Sep 4, 2025","v":1192},{"t":"Luxury Home Tour in Charlotte NC | Stunning Freedom Park You Have to See!","p":"Jun 29, 2025","v":1181},{"t":"2026 Housing Market Update | Will the market crash?","p":"Nov 2, 2025","v":1168},{"t":"Smallest Town in Charlotte NC | Should You Live in Mint Hill | Charlotte NC VLOG","p":"May 29, 2024","v":1159},{"t":"The Neighborhood That Never Sleeps | Street Art Of Charlotte NC | Plaza Midwood Vlog Tour","p":"Apr 3, 2023","v":1140},{"t":"Selecting the BEST Neighborhood to Live in Charlotte NC | Richest Paces to Live in Charlotte NC","p":"Jul 5, 2024","v":1120},{"t":"South Park Driving Tour | Check Out One of the MOST Desirable Areas of Charlotte NC","p":"Dec 5, 2024","v":1102},{"t":"Moving to Charlotte North Carolina From California | Why You Need to LEAVE California","p":"Jun 16, 2023","v":1097},{"t":"Charlotte North Carolina Affordable Houses Under $500,000","p":"Dec 14, 2025","v":1093},{"t":"DON'T MOVE to Asheville NC Before Watching | Why Charlotte is Better Than Asheville | Charlotte VLOG","p":"May 10, 2023","v":1081},{"t":"Davidson North Carolina Explained | Best Small Town in Charlotte","p":"Oct 13, 2022","v":1079},{"t":"Charlotte Hoods EXPOSED! | BEWARE Before Moving to Charlotte North Carolina in 2025","p":"Dec 19, 2024","v":1078},{"t":"Discover The MOST IMPRESSIVE Home in Charlotte NC TOP Luxury Community","p":"Mar 1, 2026","v":1068},{"t":"Tour This NEW CONSTRUCTION Home in One of Charlotte NC BEST Locations! [FULL TOUR]","p":"Jan 25, 2026","v":1063},{"t":"This MASSIVE Project Is Why Charlotte NC Is Going to EXPLODE in 2026! [The Iron District]","p":"Feb 22, 2026","v":1058},{"t":"Charlotte North Carolina vs New York City | Things to Know Before Moving to Charlotte From New York","p":"Aug 16, 2022","v":1049},{"t":"Top 10 Reasons to Leave Florida for North Carolina | Florida Vs Charlotte NC | Charlotte NC VLOG","p":"Nov 11, 2024","v":1047},{"t":"Charlotte’s Most Expensive Neighborhoods","p":"Jul 17, 2025","v":1016},{"t":"What You Need to Know BEFORE Moving to Mint Hill | Discover Small Towns of Charlotte NC","p":"Jul 2, 2024","v":1015},{"t":"What Does $600k Get In Huntersville North Carolina 2022 | Living in Huntersville North Carolina","p":"Sep 23, 2022","v":1015},{"t":"Why North Charlotte is Better Than South Charlotte | Best part of Charlotte North Carolina","p":"May 12, 2023","v":1005},{"t":"North Carolina Lake Front House | Luxury Lake Front | 8136 Energy Lane, Catawba North Carolina 28609","p":"Feb 15, 2024","v":1000},{"t":"Top 5 Things to Know About Davidson | Living in Davidson North Carolina","p":"Oct 24, 2022","v":978},{"t":"Living in Denver NC Map Tour  | Lower Home Prices","p":"Aug 31, 2025","v":978},{"t":"Affordable NC Homes for Sale |  Most Affordable Town in Charlotte | 2108 Lane St Kannapolis NC","p":"May 7, 2024","v":971},{"t":"Charlotte NC Newest Homes UNDER $700K! (Limited Availability) | Affordable Luxury in Lower South End","p":"Apr 13, 2025","v":968},{"t":"North Charlotte Explained | Why Prosperity Village is The BEST Neighborhood in Charlotte","p":"Jun 6, 2023","v":966},{"t":"Lake Front Home in Charlotte NC | Lakefront Under $450k | 14523 Waterside Drive Charlotte NC","p":"Jan 30, 2024","v":917},{"t":"Charlotte Resale Homes vs New Construction | What’s BEST for Buyers in Charlotte NC? | Charlotte NC","p":"Mar 9, 2025","v":917},{"t":"Luxury New Construction in Charlotte NC | Luxury Home Tour South Charlotte | Charlotte VLOG Tour","p":"Aug 16, 2024","v":908},{"t":"Moving to Mooresville North Carolina | America's Home for Nascar | Charlotte VLOG Tour","p":"Oct 30, 2023","v":908},{"t":"Why People Are MOVING to Weddington NC | Charlotte NC Best Suburbs","p":"Apr 17, 2025","v":896},{"t":"NoDa VLOG Tour | Most Popular Charlotte Brewery | NoDa Arts District in Charlotte NC","p":"Dec 21, 2022","v":889},{"t":"Record Low Interest Rates | New Construction Offers Massive Incentives | Charlotte Vlog Tour","p":"Nov 25, 2023","v":883},{"t":"How to Meet People in Charlotte | Making New Friends in Charlotte | Charlotte NC VLOG","p":"Mar 1, 2023","v":868},{"t":"Is Living in Charlotte North Carolina Safe in 2026? Real Crime Data EXPLAINED","p":"Jan 22, 2026","v":862},{"t":"Charlotte 2023 Market Update | What's Happening to Home Prices?","p":"Dec 5, 2023","v":860},{"t":"Big Little City Outside of Charlotte | Watch This Before Moving to Charlotte NC | Mooresville NC","p":"Dec 13, 2023","v":856},{"t":"Top Cities in North Carolina for Job Growth Through 2030","p":"Jan 8, 2026","v":848},{"t":"7 Things You MUST Know Before Buying A House | Charlotte NC Real Estate","p":"Sep 5, 2024","v":846},{"t":"Charlotte NC Traffic 2025 Worst Commutes, Best Routes & Where to Live to Avoid It","p":"Sep 28, 2025","v":812},{"t":"New Charlotte Home UNDER $400,000 | AFFORDABLE Charlotte NC Home Tour","p":"Feb 23, 2025","v":802},{"t":"Will The 2023 Housing Market Crash | Full Breakdown of Charlotte Market","p":"Dec 23, 2022","v":797},{"t":"Destruction of the NC Mountains By Hurricane | What REALLY Happened in the Carolina Mountains","p":"Oct 10, 2024","v":788},{"t":"Lake Norman Homes with Docks Under $1M | Where to Buy Near Charlotte","p":"Dec 7, 2025","v":769},{"t":"5 Reasons Why Should You Consider NEW CONSTRUCTION | New Construction VS Resale Home | Charlotte NC","p":"Mar 6, 2025","v":767},{"t":"Why This Renovated Charlotte NC Home Is BETTER Than New Construction | Charlotte NC Home Tour","p":"Apr 10, 2025","v":765},{"t":"Charlotte Real Estate Update 2023 | Is The Real Estate Market Crashing","p":"May 19, 2023","v":765},{"t":"Living in Harrisburg NC | Pros & Cons of Moving Near Charlotte","p":"Sep 7, 2025","v":763},{"t":"Buying vs Renting in Charlotte North Carolina: What Makes More Sense in 2026?","p":"Feb 1, 2026","v":747},{"t":"The TRUTH About Charlotte’s Cheapest Neighborhoods (Before You Move Here!) | Moving to Charlotte NC","p":"Nov 16, 2025","v":746},{"t":"Fort Mill SC Homes for Sale | Rare Under $300K Townhome Near Charlotte","p":"Dec 21, 2025","v":739},{"t":"Madison Park VLOG Tour | Nicest Charlotte Neighborhood | Charlotte Neighborhood Tour","p":"Sep 4, 2023","v":738},{"t":"Staycation in Luxury Lake Mansion | Experience Lake Life in Charlotte NC | Charlotte NC VLOG","p":"Oct 27, 2024","v":734},{"t":"Why Everyone’s Leaving the West Coast for North Carolina | The #1 Reason People Are Moving!","p":"Oct 12, 2025","v":712},{"t":"Inside a Classica Homes Luxury Tour | Stunning New Construction in Huntersville NC","p":"Oct 26, 2025","v":690},{"t":"This Charlotte Dream Home Will Leave You Speechless | Harrisburg NC Home Tour","p":"Feb 8, 2026","v":682},{"t":"Valuable Homes Near Charlotte North Carolina | 105 Deal Ave, Conover, NC 28613 Property Tour","p":"Feb 24, 2024","v":680},{"t":"Harrisburg North Carolina Best Prices | Cost of Living, Homes and Schools Near Charlotte","p":"Sep 11, 2025","v":678},{"t":"Luxury Charlotte Home Tours for Sale | Lake Luxury River District | Charlotte Lakefront Homes","p":"Aug 25, 2024","v":677},{"t":"The Best Town in Charlotte NC | North Charlotte Explained | Charlotte VLOG","p":"Oct 31, 2024","v":662},{"t":"Charlotte New Build Townhouse Tour | New Build Under $450 | Charlotte NC New Construction Homes","p":"Sep 8, 2023","v":656},{"t":"New Construction is Less Expensive than Resale | New vs Used Homes: Charlotte's Surprising Price War","p":"Feb 12, 2026","v":654},{"t":"Living in Myers Park Charlotte NC | Pros & Cons, Cost of Homes, Schools & Lifestyle 2025","p":"Sep 18, 2025","v":653},{"t":"Myers Park Near Charlotte North Carolina | Neighborhood Tour, Schools and Home Prices","p":"Sep 25, 2025","v":642},{"t":"$700k House In Charlotte North Carolina's WEALTHIEST SUBURB | Waxhaw North Carolina | Luxury","p":"Sep 17, 2022","v":631},{"t":"The Best of Southpark | Charlotte Luxury Townhouse | Charlotte Luxury Home Tour","p":"Nov 21, 2024","v":628},{"t":"Why Are Homes Priced Differently? | Charlotte NC Vlog Tour | What $50,000 More Will Get You In SC","p":"Apr 18, 2023","v":627},{"t":"Is Daycare Safe? | Charlotte North Carolina's Best Daycares | Daycare Options","p":"Mar 10, 2023","v":621},{"t":"2025 Real Estate Market Update | Is It Time to Buy a Home in Charlotte NC","p":"Dec 9, 2024","v":617},{"t":"Tour of New Construction Townhouse in Mint Hill NC | Home for Sale in Mint Hill NC","p":"Jun 7, 2024","v":612},{"t":"INSIDE a $2M Custom Luxury Home in Belmont NC | Charlotte New Construction Homes","p":"Jan 18, 2026","v":587},{"t":"Luxury New Construction in South Charlotte | 55 and Over Charlotte Neighborhood | Charlotte VLOG","p":"Jul 25, 2024","v":569},{"t":"Charlotte NC vs San Antonio Texas | Cost of Living, Jobs, Weather & Lifestyle Comparison","p":"Oct 23, 2025","v":564},{"t":"Huntersville NC Home For Sale | 17112 Hugh Torrance Parkway Huntersville NC | Charlotte VLOG Tour","p":"Mar 16, 2024","v":556},{"t":"Fully Renovated Home From 1930 | Homes Under $500k in Kannapolis | Charlotte Real Estate","p":"Jun 14, 2023","v":540},{"t":"Why Duplexes are the Best Real Estate Option | Is Charlotte The BEST Place to Invest?","p":"Nov 14, 2024","v":529},{"t":"Charlotte Dog Lovers | Why Charlotte is a Dog Town","p":"Dec 3, 2022","v":524},{"t":"You Won't Believe What's Under This Charlotte Dream Home | Custom Luxury New Build","p":"Jan 15, 2026","v":521},{"t":"Matthews VLOG Tour | American Dream TV Charlotte","p":"Jun 6, 2023","v":511},{"t":"Lower South End Charlotte New Construction | New Charlotte Townhouse for Sale | 837 Imperial Court","p":"Jun 28, 2024","v":510},{"t":"Why New Yorkers Are Choosing Charlotte in 2026 | Top Reasons People Move to North Carolina","p":"Nov 9, 2025","v":499},{"t":"New Construction in Wealthiest Suburb of Charlotte | $500k In Waxhaw NC | Charlotte Home Tour","p":"Sep 21, 2022","v":495},{"t":"Tour This GORGEOUS Home in One of Charlotte's Best Neighborhoods","p":"Jan 29, 2026","v":492},{"t":"Luxury Renovated Basement Home | Charlotte Luxury Home Tour | Best Neighborhood in South Charlotte","p":"Jul 12, 2024","v":491},{"t":"Relocating to Charlotte NC for Work? The BEST Charlotte Neighborhoods to Live (2026 GUIDE)","p":"Mar 22, 2026","v":476},{"t":"Top 5 BEST Places to Live in Davidson | Where to Live in NC | Charlotte NC VLOG","p":"Nov 24, 2024","v":471},{"t":"Tour the Newest LUXURY Townhouse in Charlotte | Charlotte Luxury New Build Townhouse | Charlotte NC","p":"Dec 1, 2024","v":469},{"t":"Affect of Schools on Home Values in Charlotte NC | Charlotte NC School Districts and Home Values","p":"May 21, 2024","v":459},{"t":"How Today’s Houses Have Changed Compared to Homes Built Before 2010","p":"Oct 5, 2025","v":457},{"t":"Living in Myers Park Charlotte NC – Pros, Cons, and What You MUST Know Before Moving","p":"Jul 6, 2025","v":456},{"t":"Is Charlotte too BIG? | Did You Miss the Charlotte Boom? | Why Charlotte is STILL Hot!","p":"Apr 23, 2023","v":451},{"t":"Living in Madison Park | Madison Park Home Tour | Charlotte NC","p":"Apr 24, 2024","v":438},{"t":"Best New construction Home Close to Charlotte NC | Explore this 2 bed vs 3 bed townhouse","p":"Nov 7, 2024","v":428},{"t":"Will The Real Estate Market Crash in 2024? | Watch This BEFORE Buying or Selling Your Home","p":"Aug 8, 2024","v":425},{"t":"Watch BEFORE Moving to Cornelius | The Lake Town of Charlotte NC","p":"Dec 15, 2022","v":413},{"t":"Luxury Renovated Home Builder in Kannapolis | American Dream TV | Charlotte VLOG Tour","p":"Jul 5, 2023","v":399},{"t":"Huge House Near Charlotte NC Under $600k! | Harrisburg NC Home for Sale!","p":"Mar 29, 2026","v":389},{"t":"Discover One of Charlotte's Most Expensive Neighborhoods | Area to Consider in Moving to Charlotte","p":"Jul 16, 2024","v":370},{"t":"What $500K in Charlotte Looks Like | Charlotte NC Luxury Real Estate | New Home Tour Charlotte NC","p":"Sep 6, 2022","v":362},{"t":"Is Charlotte NC Safe & Affordable for Families? Full 2026 Guide","p":"Apr 12, 2026","v":361},{"t":"Myers Park Charlotte NC Map Tour | Schools, Homes, Prices & Lifestyle","p":"Sep 21, 2025","v":358},{"t":"HOTTEST Charlotte North Carolina Investment Property in One of the Best GROWING Areas [Pineville]","p":"Apr 5, 2026","v":318},{"t":"Top 10 Stunning Charlotte NC Living Rooms | Luxury Living Room Design Ideas & Home Tours","p":"Mar 8, 2026","v":317},{"t":"Why Buying A House Before Year-End 2025 Saves You Thousands!","p":"Nov 23, 2025","v":310},{"t":"Tour of Luxury Renovated Home | Why Older Homes Are BETTER Than New in Charlotte NC","p":"Oct 31, 2024","v":308},{"t":"Top 5 Luxury Gourmet Kitchens in Charlotte NC EVERYONE Wants in 2026 | BEST Kitchen Designs","p":"Mar 15, 2026","v":223},{"t":"How to Make the MOST When Selling Your Home | Selling Your Home in Charlotte NC","p":"Dec 12, 2024","v":190},{"t":"New Mom in Charlotte | Moms In Charlotte | Charlotte VLOG","p":"Mar 19, 2023","v":179},{"t":"BEST SCHOOLS in Charlotte North Carolina | This is Where You SHOULD Move!","p":"Apr 19, 2026","v":142}];
 
-  window.addEventListener('beforeinstallprompt', e => {
-    e.preventDefault(); deferredPrompt = e;
-    document.getElementById('installBanner').style.display = 'flex';
+const DATA_UPDATED='April 23, 2026';
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;document.getElementById('installBanner').style.display='flex';});
+document.getElementById('installBtn').addEventListener('click',()=>{if(deferredPrompt){deferredPrompt.prompt();deferredPrompt=null;document.getElementById('installBanner').style.display='none';}});
+document.getElementById('lastUpdated').textContent='Data updated: '+DATA_UPDATED;
+function init(){
+  const set=new Set();
+  VIDEOS.forEach(r=>{const d=new Date(r.p);if(!isNaN(d))set.add(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'));});
+  const sel=document.getElementById('monthPicker');
+  Array.from(set).sort().reverse().forEach(m=>{
+    const[y,mo]=m.split('-');
+    const lbl=new Date(+y,+mo-1,1).toLocaleString('en-US',{month:'long',year:'numeric'});
+    sel.innerHTML+=`<option value="${m}">${lbl}</option>`;
   });
-  document.getElementById('installBtn').addEventListener('click', () => {
-    if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt = null; document.getElementById('installBanner').style.display = 'none'; }
-  });
-
-  function splitCSV(line) {
-    const r=[]; let c='',q=false;
-    for(let i=0;i<line.length;i++){
-      if(line[i]==='"'){q=!q;}
-      else if(line[i]===','&&!q){r.push(c);c='';}
-      else c+=line[i];
-    }
-    r.push(c); return r;
-  }
-  function parseCSV(txt) {
-    const lines=txt.trim().split('\n');
-    const hdrs=splitCSV(lines[0]).map(h=>h.replace(/"/g,'').trim());
-    return lines.slice(1).map(l=>{
-      const v=splitCSV(l); const o={};
-      hdrs.forEach((h,i)=>o[h]=(v[i]||'').replace(/"/g,'').trim());
-      return o;
-    });
-  }
-  function handleFile(type, inp) {
-    const f=inp.files[0]; if(!f) return;
-    const r=new FileReader();
-    r.onload=e=>{
-      if(type==='table'){
-        parsedTable=parseCSV(e.target.result).filter(r=>r['Video title']&&r['Video title'].length>5&&parseInt(r['Duration']||0)>120);
-        populateMonths();
-      }
-      const short=f.name.length>13?f.name.slice(0,12)+'…':f.name;
-      document.getElementById('un-'+type).textContent=short;
-      document.getElementById('box-'+type).classList.add('done');
-      checkReady();
-    };
-    r.readAsText(f);
-  }
-  function populateMonths() {
-    const set=new Set();
-    parsedTable.forEach(r=>{
-      const d=new Date(r['Video publish time']);
-      if(!isNaN(d)) set.add(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'));
-    });
-    const sel=document.getElementById('monthPicker');
-    sel.innerHTML='<option value="">Select a month to analyze...</option>';
-    Array.from(set).sort().reverse().forEach(m=>{
-      const [y,mo]=m.split('-');
-      const lbl=new Date(+y,+mo-1,1).toLocaleString('en-US',{month:'long',year:'numeric'});
-      sel.innerHTML+=`<option value="${m}">${lbl}</option>`;
-    });
-  }
-  function checkReady() {
-    document.getElementById('analyzeBtn').disabled=!(parsedTable.length&&document.getElementById('monthPicker').value);
-  }
-  function getTop10(monthStr) {
-    const [y,m]=monthStr.split('-').map(Number);
-    const target=`${y-1}-${String(m).padStart(2,'0')}`;
-    return parsedTable.filter(r=>{
-      const d=new Date(r['Video publish time']);
-      if(isNaN(d)) return false;
-      return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')===target;
-    }).sort((a,b)=>parseInt(b['Views']||0)-parseInt(a['Views']||0)).slice(0,10);
-  }
-  function getRecent() {
-    const now=new Date();
-    const cut=new Date(now.getFullYear(),now.getMonth()-2,1);
-    return parsedTable.filter(r=>{
-      const d=new Date(r['Video publish time']);
-      return !isNaN(d)&&d>=cut;
-    }).sort((a,b)=>new Date(b['Video publish time'])-new Date(a['Video publish time'])).slice(0,6);
-  }
-  async function analyze() {
-    const monthStr=document.getElementById('monthPicker').value;
-    const [y,m]=monthStr.split('-').map(Number);
-    const monthName=new Date(y,m-1,1).toLocaleString('en-US',{month:'long'});
-    const lastYear=y-1;
-    const top10=getTop10(monthStr);
-    const recent=getRecent();
-
-    document.getElementById('results').style.display='none';
-    document.getElementById('errorMsg').textContent='';
-
-    if(!top10.length){
-      document.getElementById('errorMsg').textContent=`No videos found for ${monthName} ${lastYear}. Try another month.`;
-      return;
-    }
-
-    document.getElementById('loading').style.display='flex';
-    document.getElementById('analyzeBtn').disabled=true;
-
-    const topTitles=top10.slice(0,5).map((v,i)=>`${i+1}. ${v['Video title']} (${parseInt(v['Views']).toLocaleString()} views)`).join('; ');
-    const recentTitles=recent.map(v=>v['Video title']).join('; ')||'none';
-    const prompt=`NC/Charlotte real estate YouTube channel. Top videos from ${monthName} ${lastYear}: ${topTitles}. Recent uploads to avoid: ${recentTitles}. Suggest 6 fresh video topics for ${monthName} ${y}. Return JSON array with fields: title, why (1 sentence), hook (1 sentence). JSON only.`;
-
-    try {
-      const res=await fetch('/.netlify/functions/generate',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({prompt})
-      });
-      const data=await res.json();
-      if(!res.ok) throw new Error(data.error||'Server error');
-      let raw=data.text.replace(/```json|```/g,'').trim();
-      const topics=JSON.parse(raw);
-      document.getElementById('loading').style.display='none';
-      renderResults(top10,topics,recent,monthName,lastYear);
-    } catch(err){
-      document.getElementById('loading').style.display='none';
-      document.getElementById('errorMsg').textContent='Error: '+err.message;
-      document.getElementById('analyzeBtn').disabled=false;
-    }
-  }
-  function renderResults(top10,topics,recent,monthName,lastYear){
-    document.getElementById('topLabel').textContent=`Top ${top10.length} — ${monthName} ${lastYear}`;
-    document.getElementById('topVideosList').innerHTML=top10.map((v,i)=>`
-      <div class="top-video">
-        <span class="rank">${i+1}</span>
-        <span class="vtitle">${v['Video title']}</span>
-        <span class="vviews">${parseInt(v['Views']).toLocaleString()}</span>
-      </div>`).join('');
-    document.getElementById('topicsGrid').innerHTML=topics.map((t,i)=>`
-      <div class="topic-card">
-        <div class="topic-num">Idea ${i+1}</div>
-        <div class="topic-title">${t.title}</div>
-        <div class="topic-why">${t.why}</div>
-        <div class="topic-hook">${t.hook}</div>
-        <button class="copy-btn" onclick="copyT(this,'${encodeURIComponent(t.title)}')">Copy title</button>
-      </div>`).join('');
-    document.getElementById('historyList').innerHTML=!recent.length
-      ?'<div style="font-size:12px;color:var(--muted)">No recent videos found.</div>'
-      :recent.map(v=>`
-        <div class="history-item">
-          <div class="hdate">${new Date(v['Video publish time']).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div>
-          <div><div class="htitle">${v['Video title']}</div><div class="hviews">${parseInt(v['Views']).toLocaleString()} views</div></div>
-        </div>`).join('');
-    document.getElementById('results').style.display='block';
+}
+function checkReady(){document.getElementById('analyzeBtn').disabled=!document.getElementById('monthPicker').value;}
+function getTop10(monthStr){
+  const[y,m]=monthStr.split('-').map(Number);
+  const target=`${y-1}-${String(m).padStart(2,'0')}`;
+  return VIDEOS.filter(r=>{const d=new Date(r.p);if(isNaN(d))return false;return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')===target;}).sort((a,b)=>b.v-a.v).slice(0,10);
+}
+function getRecent(){
+  const now=new Date();const cut=new Date(now.getFullYear(),now.getMonth()-2,1);
+  return VIDEOS.filter(r=>{const d=new Date(r.p);return!isNaN(d)&&d>=cut;}).sort((a,b)=>new Date(b.p)-new Date(a.p)).slice(0,6);
+}
+async function analyze(){
+  const monthStr=document.getElementById('monthPicker').value;
+  const[y,m]=monthStr.split('-').map(Number);
+  const monthName=new Date(y,m-1,1).toLocaleString('en-US',{month:'long'});
+  const lastYear=y-1;
+  const top10=getTop10(monthStr);
+  const recent=getRecent();
+  document.getElementById('results').style.display='none';
+  document.getElementById('errorMsg').textContent='';
+  if(!top10.length){document.getElementById('errorMsg').textContent=`No videos found for ${monthName} ${lastYear}. Try another month.`;return;}
+  document.getElementById('loading').style.display='flex';
+  document.getElementById('analyzeBtn').disabled=true;
+  const topTitles=top10.slice(0,5).map((v,i)=>`${i+1}. ${v.t} (${v.v.toLocaleString()} views)`).join('; ');
+  const recentTitles=recent.map(v=>v.t).join('; ')||'none';
+  const prompt=`NC/Charlotte real estate YouTube channel. Top videos from ${monthName} ${lastYear}: ${topTitles}. Recent uploads to avoid: ${recentTitles}. Suggest 6 fresh video topics for ${monthName} ${y}. Return JSON array with fields: title, why (1 sentence), hook (1 sentence). JSON only.`;
+  try{
+    const res=await fetch('/.netlify/functions/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt})});
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error||'Server error');
+    let raw=data.text.replace(/```json|```/g,'').trim();
+    const topics=JSON.parse(raw);
+    document.getElementById('loading').style.display='none';
+    renderResults(top10,topics,recent,monthName,lastYear);
+  }catch(err){
+    document.getElementById('loading').style.display='none';
+    document.getElementById('errorMsg').textContent='Error: '+err.message;
     document.getElementById('analyzeBtn').disabled=false;
-    document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
   }
-  function copyT(btn,encoded){
-    const title=decodeURIComponent(encoded);
-    navigator.clipboard.writeText(title).then(()=>{
-      btn.textContent='Copied!';
-      setTimeout(()=>btn.textContent='Copy title',1500);
-    }).catch(()=>{
-      const ta=document.createElement('textarea');
-      ta.value=title; document.body.appendChild(ta); ta.select();
-      document.execCommand('copy'); document.body.removeChild(ta);
-      btn.textContent='Copied!';
-      setTimeout(()=>btn.textContent='Copy title',1500);
-    });
-  }
-  if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
+}
+function renderResults(top10,topics,recent,monthName,lastYear){
+  document.getElementById('topLabel').textContent=`Top ${top10.length} — ${monthName} ${lastYear}`;
+  document.getElementById('topVideosList').innerHTML=top10.map((v,i)=>`<div class="top-video"><span class="rank">${i+1}</span><span class="vtitle">${v.t}</span><span class="vviews">${v.v.toLocaleString()}</span></div>`).join('');
+  document.getElementById('topicsGrid').innerHTML=topics.map((t,i)=>`<div class="topic-card"><div class="topic-num">Idea ${i+1}</div><div class="topic-title">${t.title}</div><div class="topic-why">${t.why}</div><div class="topic-hook">${t.hook}</div><button class="copy-btn" onclick="copyT(this,'${encodeURIComponent(t.title)}')">Copy title</button></div>`).join('');
+  document.getElementById('historyList').innerHTML=!recent.length?'<div style="font-size:12px;color:var(--muted)">No recent videos found.</div>':recent.map(v=>`<div class="history-item"><div class="hdate">${new Date(v.p).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div><div><div class="htitle">${v.t}</div><div class="hviews">${v.v.toLocaleString()} views</div></div></div>`).join('');
+  document.getElementById('results').style.display='block';
+  document.getElementById('analyzeBtn').disabled=false;
+  document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function copyT(btn,encoded){
+  const title=decodeURIComponent(encoded);
+  navigator.clipboard.writeText(title).then(()=>{btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy title',1500);}).catch(()=>{const ta=document.createElement('textarea');ta.value=title;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy title',1500);});
+}
+if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});
+init();
 </script>
 </body>
 </html>
