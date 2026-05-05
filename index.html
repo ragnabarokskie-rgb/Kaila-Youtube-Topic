@@ -268,7 +268,19 @@ function copyT(btn,encoded){
   const title=decodeURIComponent(encoded);
   navigator.clipboard.writeText(title).then(()=>{btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy title',1500);}).catch(()=>{const ta=document.createElement('textarea');ta.value=title;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy title',1500);});
 }
-if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/sw.js').then(reg=>{
+    reg.addEventListener('updatefound',()=>{
+      const newWorker=reg.installing;
+      newWorker.addEventListener('statechange',()=>{
+        if(newWorker.state==='installed'&&navigator.serviceWorker.controller){
+          window.location.reload();
+        }
+      });
+    });
+  }).catch(()=>{});
+  navigator.serviceWorker.addEventListener('controllerchange',()=>window.location.reload());
+}
 init();
 </script>
 </body>
