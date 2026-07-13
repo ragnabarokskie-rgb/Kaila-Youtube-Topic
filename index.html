@@ -89,7 +89,7 @@ select option{background:#1e2020;}
     </div>
     <div class="card">
       <div class="section-title">Suggested topics</div>
-      <div style="font-size:11px;color:var(--accent);margin:-.5rem 0 .75rem;">Fresh ideas only — no repeats from the last 4 months</div>
+      <div id="topicsNote" style="font-size:11px;color:var(--accent);margin:-.5rem 0 .75rem;">Fresh ideas only — no repeats from the last 4 months</div>
       <div id="topicsGrid" class="topics-grid"></div>
     </div>
     <div class="card">
@@ -128,6 +128,24 @@ function getRecent(){
   const now=new Date();const cut=new Date(now.getFullYear(),now.getMonth()-4,1);
   return VIDEOS.filter(r=>{const d=new Date(r.p);return!isNaN(d)&&d>=cut;}).sort((a,b)=>new Date(b.p)-new Date(a.p)).slice(0,12);
 }
+function normTitle(s){
+  return (s||'').toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+}
+function isDuplicateTitle(candidate,bannedTitles){
+  const cn=normTitle(candidate);
+  const cWords=new Set(cn.split(' ').filter(w=>w.length>3));
+  for(const b of bannedTitles){
+    const bn=normTitle(b);
+    if(cn===bn)return true;
+    const bWords=new Set(bn.split(' ').filter(w=>w.length>3));
+    if(bWords.size===0||cWords.size===0)continue;
+    let overlap=0;
+    for(const w of cWords){if(bWords.has(w))overlap++;}
+    const ratio=overlap/Math.min(cWords.size,bWords.size);
+    if(ratio>=0.7)return true;
+  }
+  return false;
+}
 async function analyze(){
   const monthStr=document.getElementById('monthPicker').value;
   const[y,m]=monthStr.split('-').map(Number);
@@ -141,16 +159,30 @@ async function analyze(){
   document.getElementById('loading').style.display='flex';
   document.getElementById('analyzeBtn').disabled=true;
   const topTitles=top10.slice(0,5).map((v,i)=>`${i+1}. ${v.t} (${v.v.toLocaleString()} views)`).join('; ');
-  const recentTitles=recent.map(v=>v.t).join('; ')||'none';
-  const prompt=`NC/Charlotte real estate YouTube channel. Top videos from ${monthName} ${lastYear}: ${topTitles}. Videos already uploaded in the last 4 months (do NOT repeat these topics, themes, or angles — suggest genuinely different ideas): ${recentTitles}. Suggest 6 fresh video topics for ${monthName} ${y} that are clearly distinct from the recent uploads listed above. Return JSON array with fields: title, why (1 sentence), hook (1 sentence). JSON only.`;
+  const recentTitleList=recent.map(v=>v.t);
+  const bannedTitles=[...recentTitleList];
+  const cleanTopics=[];
+  const NEEDED=6;
+  const MAX_ATTEMPTS=3;
   try{
-    const res=await fetch('/.netlify/functions/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt})});
-    const data=await res.json();
-    if(!res.ok)throw new Error(data.error||'Server error');
-    let raw=data.text.replace(/```json|```/g,'').trim();
-    const topics=JSON.parse(raw);
+    for(let attempt=0;attempt<MAX_ATTEMPTS&&cleanTopics.length<NEEDED;attempt++){
+      const stillNeeded=NEEDED-cleanTopics.length;
+      const recentTitles=bannedTitles.join('; ')||'none';
+      const prompt=`NC/Charlotte real estate YouTube channel. Top videos from ${monthName} ${lastYear}: ${topTitles}. Videos already uploaded in the last 4 months (do NOT repeat these topics, themes, or angles — suggest genuinely different ideas): ${recentTitles}. Suggest ${stillNeeded} fresh video topics for ${monthName} ${y} that are clearly distinct from the recent uploads listed above. Return JSON array with fields: title, why (1 sentence), hook (1 sentence). JSON only.`;
+      const res=await fetch('/.netlify/functions/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt})});
+      const data=await res.json();
+      if(!res.ok)throw new Error(data.error||'Server error');
+      let raw=data.text.replace(/```json|```/g,'').trim();
+      const batch=JSON.parse(raw);
+      for(const t of batch){
+        if(cleanTopics.length>=NEEDED)break;
+        if(isDuplicateTitle(t.title,bannedTitles))continue;
+        cleanTopics.push(t);
+        bannedTitles.push(t.title);
+      }
+    }
     document.getElementById('loading').style.display='none';
-    renderResults(top10,topics,recent,monthName,lastYear);
+    renderResults(top10,cleanTopics,recent,monthName,lastYear);
   }catch(err){
     document.getElementById('loading').style.display='none';
     document.getElementById('errorMsg').textContent='Error: '+err.message;
@@ -160,6 +192,12 @@ async function analyze(){
 function renderResults(top10,topics,recent,monthName,lastYear){
   document.getElementById('topLabel').textContent='Top '+top10.length+' — '+monthName+' '+lastYear;
   document.getElementById('topVideosList').innerHTML=top10.map((v,i)=>`<div class="top-video"><span class="rank">${i+1}</span><span class="vtitle">${v.t}</span><span class="vviews">${v.v.toLocaleString()}</span></div>`).join('');
+  const noteEl=document.getElementById('topicsNote');
+  if(topics.length<6){
+    noteEl.textContent=`Based on your top performers from ${monthName} ${lastYear} — ${topics.length} fresh, non-repeating idea${topics.length===1?'':'s'} found (no overlap with the last 4 months)`;
+  }else{
+    noteEl.textContent=`Based on your top performers from ${monthName} ${lastYear} — fresh angles only, no repeats from the last 4 months`;
+  }
   document.getElementById('topicsGrid').innerHTML=topics.map((t,i)=>`<div class="topic-card"><div class="topic-num">Idea ${i+1}</div><div class="topic-title">${t.title}</div><div class="topic-why">${t.why}</div><div class="topic-hook">${t.hook}</div><button class="copy-btn" onclick="copyT(this,'${encodeURIComponent(t.title)}')">Copy title</button></div>`).join('');
   document.getElementById('historyList').innerHTML=!recent.length?'<div style="font-size:12px;color:var(--muted)">No recent videos found.</div>':recent.map(v=>`<div class="history-item"><div class="hdate">${new Date(v.p).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div><div><div class="htitle">${v.t}</div><div class="hviews">${v.v.toLocaleString()} views</div></div></div>`).join('');
   document.getElementById('results').style.display='block';
