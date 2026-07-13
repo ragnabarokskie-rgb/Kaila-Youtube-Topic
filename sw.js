@@ -1,4 +1,4 @@
-const CACHE = 'yt-topics-v7';
+const CACHE = 'yt-topics-v8';
 
 self.addEventListener('install', e => {
   e.waitUntil(
