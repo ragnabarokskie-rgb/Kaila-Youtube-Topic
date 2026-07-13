@@ -89,6 +89,7 @@ select option{background:#1e2020;}
     </div>
     <div class="card">
       <div class="section-title">Suggested topics</div>
+      <div style="font-size:11px;color:var(--muted);margin:-.5rem 0 .75rem;">Fresh ideas only — not repeats from the last 4 months</div>
       <div id="topicsGrid" class="topics-grid"></div>
     </div>
     <div class="card">
@@ -141,7 +142,7 @@ async function analyze(){
   document.getElementById('analyzeBtn').disabled=true;
   const topTitles=top10.slice(0,5).map((v,i)=>`${i+1}. ${v.t} (${v.v.toLocaleString()} views)`).join('; ');
   const recentTitles=recent.map(v=>v.t).join('; ')||'none';
-  const prompt=`NC/Charlotte real estate YouTube channel. Top videos from ${monthName} ${lastYear}: ${topTitles}. Recent uploads to avoid: ${recentTitles}. Suggest 6 fresh video topics for ${monthName} ${y}. Return JSON array with fields: title, why (1 sentence), hook (1 sentence). JSON only.`;
+  const prompt=`NC/Charlotte real estate YouTube channel. Top videos from ${monthName} ${lastYear}: ${topTitles}. Videos already uploaded in the last 4 months (do NOT repeat these topics, themes, or angles — suggest genuinely different ideas): ${recentTitles}. Suggest 6 fresh video topics for ${monthName} ${y} that are clearly distinct from the recent uploads listed above. Return JSON array with fields: title, why (1 sentence), hook (1 sentence). JSON only.`;
   try{
     const res=await fetch('/.netlify/functions/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt})});
     const data=await res.json();
