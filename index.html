@@ -198,14 +198,16 @@ function renderResults(top10,topics,recent,monthName,lastYear){
   }else{
     noteEl.textContent=`Based on your top performers from ${monthName} ${lastYear} — fresh angles only, no repeats from the last 4 months`;
   }
-  document.getElementById('topicsGrid').innerHTML=topics.map((t,i)=>`<div class="topic-card"><div class="topic-num">Idea ${i+1}</div><div class="topic-title">${t.title}</div><div class="topic-why">${t.why}</div><div class="topic-hook">${t.hook}</div><button class="copy-btn" onclick="copyT(this,'${encodeURIComponent(t.title)}')">Copy title</button></div>`).join('');
+  document.getElementById('topicsGrid').innerHTML=topics.map((t,i)=>`<div class="topic-card"><div class="topic-num">Idea ${i+1}</div><div class="topic-title">${t.title}</div><div class="topic-why">${t.why}</div><div class="topic-hook">${t.hook}</div><button class="copy-btn" data-idx="${i}">Copy title</button></div>`).join('');
+  document.querySelectorAll('#topicsGrid .copy-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>copyT(btn,topics[Number(btn.dataset.idx)].title));
+  });
   document.getElementById('historyList').innerHTML=!recent.length?'<div style="font-size:12px;color:var(--muted)">No recent videos found.</div>':recent.map(v=>`<div class="history-item"><div class="hdate">${new Date(v.p).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div><div><div class="htitle">${v.t}</div><div class="hviews">${v.v.toLocaleString()} views</div></div></div>`).join('');
   document.getElementById('results').style.display='block';
   document.getElementById('analyzeBtn').disabled=false;
   document.getElementById('results').scrollIntoView({behavior:'smooth',block:'start'});
 }
-function copyT(btn,encoded){
-  const title=decodeURIComponent(encoded);
+function copyT(btn,title){
   navigator.clipboard.writeText(title).then(()=>{btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy title',1500);}).catch(()=>{const ta=document.createElement('textarea');ta.value=title;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy title',1500);});
 }
 if('serviceWorker' in navigator){
