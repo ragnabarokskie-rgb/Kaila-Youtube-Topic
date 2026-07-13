@@ -25,6 +25,14 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 select{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:16px;font-weight:300;padding:12px 14px;outline:none;appearance:none;-webkit-appearance:none;margin-bottom:.875rem;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a7d7a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;}
 select:focus{border-color:var(--accent);}
 select option{background:#1e2020;}
+.topic-input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:300;padding:12px 14px;outline:none;margin-bottom:.875rem;}
+.topic-input:focus{border-color:var(--accent);}
+.sim-result{margin-top:.25rem;}
+.sim-label{font-size:13px;font-weight:500;margin-bottom:.4rem;}
+.sim-bar-track{width:100%;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;margin-bottom:.6rem;}
+.sim-bar-fill{height:100%;border-radius:4px;transition:width .4s ease;}
+.sim-match{font-size:12px;color:var(--muted);line-height:1.5;}
+.sim-suggestion{background:var(--surface2);border-radius:12px;padding:1rem;margin-top:.75rem;}
 .last-updated{font-size:11px;color:var(--muted);margin-bottom:.75rem;}
 .btn{width:100%;padding:15px;background:var(--accent);color:#0e0f0f;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;transition:all .2s;touch-action:manipulation;}
 .btn:active:not(:disabled){background:var(--accent2);transform:scale(.98);}
@@ -76,6 +84,12 @@ select option{background:#1e2020;}
       <option value="">Select a month...</option>
     </select>
     <button class="btn" id="analyzeBtn" onclick="analyze()" disabled>Generate topics</button>
+  </div>
+  <div class="card">
+    <div class="card-label">Check your own topic idea</div>
+    <input type="text" id="ownTopicInput" class="topic-input" placeholder="e.g. Best Charlotte neighborhoods for retirees">
+    <button class="btn" id="checkTopicBtn" onclick="checkMyTopic()">Check similarity</button>
+    <div id="ownTopicResult" class="sim-result" style="display:none;"></div>
   </div>
   <div id="loading" class="loading">
     <div class="spinner"></div>
@@ -131,20 +145,65 @@ function getRecent(){
 function normTitle(s){
   return (s||'').toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
 }
+function titleSimilarity(a,b){
+  const an=normTitle(a),bn=normTitle(b);
+  if(!an||!bn)return 0;
+  if(an===bn)return 1;
+  const aWords=new Set(an.split(' ').filter(w=>w.length>3));
+  const bWords=new Set(bn.split(' ').filter(w=>w.length>3));
+  if(aWords.size===0||bWords.size===0)return 0;
+  let overlap=0;
+  for(const w of aWords){if(bWords.has(w))overlap++;}
+  return overlap/Math.min(aWords.size,bWords.size);
+}
 function isDuplicateTitle(candidate,bannedTitles){
-  const cn=normTitle(candidate);
-  const cWords=new Set(cn.split(' ').filter(w=>w.length>3));
   for(const b of bannedTitles){
-    const bn=normTitle(b);
-    if(cn===bn)return true;
-    const bWords=new Set(bn.split(' ').filter(w=>w.length>3));
-    if(bWords.size===0||cWords.size===0)continue;
-    let overlap=0;
-    for(const w of cWords){if(bWords.has(w))overlap++;}
-    const ratio=overlap/Math.min(cWords.size,bWords.size);
-    if(ratio>=0.7)return true;
+    if(titleSimilarity(candidate,b)>=0.7)return true;
   }
   return false;
+}
+async function checkMyTopic(){
+  const input=document.getElementById('ownTopicInput').value.trim();
+  const resultEl=document.getElementById('ownTopicResult');
+  if(!input){resultEl.style.display='none';return;}
+  document.getElementById('checkTopicBtn').disabled=true;
+  document.getElementById('checkTopicBtn').textContent='Checking...';
+  let best={video:null,score:0};
+  for(const v of VIDEOS){
+    const score=titleSimilarity(input,v.t);
+    if(score>best.score)best={video:v,score};
+  }
+  const pct=Math.round(best.score*100);
+  let color,label;
+  if(pct>=70){color='var(--danger)';label='Very similar — halos kapareho na';}
+  else if(pct>=40){color='var(--gold)';label='Medyo similar — may overlap';}
+  else{color='var(--accent)';label='Fresh — walang kaparehong topic';}
+  let html=`<div class="sim-label" style="color:${color}">${label} (${pct}% match)</div>
+    <div class="sim-bar-track"><div class="sim-bar-fill" style="width:${pct}%;background:${color}"></div></div>`;
+  if(best.video&&pct>=25){
+    html+=`<div class="sim-match">Closest match: "${best.video.t}" (${new Date(best.video.p).toLocaleDateString('en-US',{month:'short',year:'numeric'})}, ${best.video.v.toLocaleString()} views)</div>`;
+  }else{
+    html+=`<div class="sim-match">Walang malapit na katulad sa iyong ${VIDEOS.length} videos — go for it!</div>`;
+  }
+  resultEl.innerHTML=html;
+  resultEl.style.display='block';
+  if(pct>=40){
+    resultEl.innerHTML+=`<div id="altSuggestion" class="sim-suggestion">Generating a fresher angle...</div>`;
+    try{
+      const prompt=`NC/Charlotte real estate YouTube channel. My boss thought of this video topic idea: "${input}". The closest existing video already uploaded is: "${best.video.t}". They are ${pct}% similar. Suggest ONE alternative video title that keeps the core interest of the original idea but takes a genuinely different angle so it does not overlap with the existing video. Return JSON with fields: title, why (1 sentence explaining how it differs). JSON only.`;
+      const res=await fetch('/.netlify/functions/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt})});
+      const data=await res.json();
+      if(!res.ok)throw new Error(data.error||'Server error');
+      let raw=data.text.replace(/```json|```/g,'').trim();
+      const alt=JSON.parse(raw);
+      document.getElementById('altSuggestion').innerHTML=`<div class="topic-num">Suggested alternative</div><div class="topic-title">${alt.title}</div><div class="topic-why">${alt.why}</div><button class="copy-btn" id="copyAltBtn">Copy title</button>`;
+      document.getElementById('copyAltBtn').addEventListener('click',function(){copyT(this,alt.title);});
+    }catch(err){
+      document.getElementById('altSuggestion').innerHTML=`<div class="sim-match">Could not generate an alternative: ${err.message}</div>`;
+    }
+  }
+  document.getElementById('checkTopicBtn').disabled=false;
+  document.getElementById('checkTopicBtn').textContent='Check similarity';
 }
 async function analyze(){
   const monthStr=document.getElementById('monthPicker').value;
