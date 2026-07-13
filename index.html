@@ -92,7 +92,7 @@ select option{background:#1e2020;}
       <div id="topicsGrid" class="topics-grid"></div>
     </div>
     <div class="card">
-      <div class="section-title">Recent videos — last 2 months</div>
+      <div class="section-title">Recent videos — last 4 months</div>
       <div id="historyList"></div>
     </div>
   </div>
@@ -124,8 +124,8 @@ function getTop10(monthStr){
   return VIDEOS.filter(r=>{const d=new Date(r.p);if(isNaN(d))return false;return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')===target;}).sort((a,b)=>b.v-a.v).slice(0,10);
 }
 function getRecent(){
-  const now=new Date();const cut=new Date(now.getFullYear(),now.getMonth()-2,1);
-  return VIDEOS.filter(r=>{const d=new Date(r.p);return!isNaN(d)&&d>=cut;}).sort((a,b)=>new Date(b.p)-new Date(a.p)).slice(0,6);
+  const now=new Date();const cut=new Date(now.getFullYear(),now.getMonth()-4,1);
+  return VIDEOS.filter(r=>{const d=new Date(r.p);return!isNaN(d)&&d>=cut;}).sort((a,b)=>new Date(b.p)-new Date(a.p)).slice(0,12);
 }
 async function analyze(){
   const monthStr=document.getElementById('monthPicker').value;
