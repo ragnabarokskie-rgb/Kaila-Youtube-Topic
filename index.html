@@ -175,15 +175,15 @@ async function checkMyTopic(){
   }
   const pct=Math.round(best.score*100);
   let color,label;
-  if(pct>=70){color='var(--danger)';label='Very similar — halos kapareho na';}
-  else if(pct>=40){color='var(--gold)';label='Medyo similar — may overlap';}
-  else{color='var(--accent)';label='Fresh — walang kaparehong topic';}
+  if(pct>=70){color='var(--danger)';label='Very similar — this has basically been covered';}
+  else if(pct>=40){color='var(--gold)';label='Somewhat similar — overlaps with an existing video';}
+  else{color='var(--accent)';label='Fresh — no matching topic found';}
   let html=`<div class="sim-label" style="color:${color}">${label} (${pct}% match)</div>
     <div class="sim-bar-track"><div class="sim-bar-fill" style="width:${pct}%;background:${color}"></div></div>`;
   if(best.video&&pct>=25){
     html+=`<div class="sim-match">Closest match: "${best.video.t}" (${new Date(best.video.p).toLocaleDateString('en-US',{month:'short',year:'numeric'})}, ${best.video.v.toLocaleString()} views)</div>`;
   }else{
-    html+=`<div class="sim-match">Walang malapit na katulad sa iyong ${VIDEOS.length} videos — go for it!</div>`;
+    html+=`<div class="sim-match">No close match found among your ${VIDEOS.length} videos — go for it!</div>`;
   }
   resultEl.innerHTML=html;
   resultEl.style.display='block';
