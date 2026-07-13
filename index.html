@@ -126,7 +126,7 @@ function getTop10(monthStr){
 }
 function getRecent(){
   const now=new Date();const cut=new Date(now.getFullYear(),now.getMonth()-4,1);
-  return VIDEOS.filter(r=>{const d=new Date(r.p);return!isNaN(d)&&d>=cut;}).sort((a,b)=>new Date(b.p)-new Date(a.p)).slice(0,12);
+  return VIDEOS.filter(r=>{const d=new Date(r.p);return!isNaN(d)&&d>=cut;}).sort((a,b)=>new Date(b.p)-new Date(a.p));
 }
 function normTitle(s){
   return (s||'').toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
